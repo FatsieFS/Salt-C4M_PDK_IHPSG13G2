@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<klayout-macro><description>C4M.IHPSG13G2 primitives library macro</description><version /><category>pymacros</category><prolog /><epilog /><doc /><autorun>true</autorun><autorun-early>false</autorun-early><priority>0</priority><shortcut /><show-in-manu>false</show-in-manu><group-name /><menu-path /><interpreter>python</interpreter><dsl-interpreter-name /><text>import pya
+from c4m.pdk import ihpsg13g2
+ihpsg13g2.pya_register_primlib()
+</text></klayout-macro>

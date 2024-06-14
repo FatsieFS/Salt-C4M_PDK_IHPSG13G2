@@ -41,15 +41,6 @@ def dcdiode_create(dio: DCDiodeT, *, create_cb: Optional[Callable[[DCDiodeT], No
         dio.layout.add_shape(
             shape=lbl, layer=TEXT, net=None,
         )
-        dio_lbl = "diodevss_4kv"
-    else:
-        assert dio.type_ == "p"
-        dio_lbl = "diodevdd_4kv"
-    p = _geo.Point(x=0.5*dio.innerwidth, y=0.5*dio.outerheight)
-    lbl = _geo.Label(origin=p, text=dio_lbl)
-    dio.layout.add_shape(
-        shape=lbl, layer=TEXT, net=None,
-    )
     if create_cb:
         create_cb(dio)
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR GPL-2.0-or-later OR CERN-OHL-S-2.0+ OR Apache-2.0
-from typing import Callable, Optional, cast
+from typing import Callable, Optional, Any, cast
 from functools import partial
 
 from pdkmaster.technology import property_ as _prp, geometry as _geo, primitive as _prm
@@ -32,7 +32,6 @@ _stdlib = _lbry.RoutingGaugeLibrary(
 _stdfab = StdCell1V2LambdaFactory(lib=_stdlib, name_prefix="sg13g2_io_")
 # TODO: change it so .add_default() is not needed
 _stdfab.add_default()
-iolib = _lbry.Library(name="sg13g2_io", tech=tech)
 
 _cell_width = 80.0
 _cell_height = 180.0
@@ -162,7 +161,27 @@ class IHPSG13g2IOFactory(IOFactory):
             )
         else:
             return super().get_cell(name, create_cb=create_cb)
-ihpsg13g2_iofab = IHPSG13g2IOFactory(
-    lib=iolib, cktfab=cktfab, layoutfab=layoutfab, name_prefix="sg13g2_",
-)
-ihpsg13g2_iofab.get_cell("Gallery")
+# iolib is handled by __getattr__()
+
+
+_ihpsg13g2_iofab: Optional[IHPSG13g2IOFactory] = None
+ihpsg13g2_iofab: IHPSG13g2IOFactory
+_iolib: Optional[_lbry.Library] = None
+iolib: _lbry.Library
+def __getattr__(name: str) -> Any:
+    if name in ("ihpsg13g2_iofab", "iolib"):
+        global _ihpsg13g2_iofab, _iolib
+        if _iolib is None:
+            _iolib = _lbry.Library(name="sg13g2_io", tech=tech)
+            _ihpsg13g2_iofab = IHPSG13g2IOFactory(
+                lib=_iolib, cktfab=cktfab, layoutfab=layoutfab, name_prefix="sg13g2_",
+            )
+            _ihpsg13g2_iofab.get_cell("Gallery")
+        if name == "ihpsg13g2_iofab":
+            assert _ihpsg13g2_iofab is not None
+            return _ihpsg13g2_iofab
+        else:
+            assert name == "iolib"
+            return _iolib
+    else:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

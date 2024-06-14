@@ -315,12 +315,14 @@ class _IHPSG13G2(_tch.Technology):
             recog_dio,
             _prm.Diode(
                 name="ndiode", wire=Activ,
+                min_width=0.48, # rule not yet in DRM
                 indicator=recog_dio,
                 min_indicator_enclosure=_prp.Enclosure(0.02), # From GDSII
                 implant=(), min_implant_enclosure=(),
             ),
             _prm.Diode(
                 name="pdiode", wire=Activ,
+                min_width=0.48, # rule not yet in DRM
                 indicator=recog_dio,
                 min_indicator_enclosure=_prp.Enclosure(0.02), # From GDSII
                 implant=pSD, min_implant_enclosure=(),

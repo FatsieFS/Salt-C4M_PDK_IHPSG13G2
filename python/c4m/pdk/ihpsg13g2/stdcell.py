@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR GPL-2.0-or-later OR CERN-OHL-S-2.0+ OR Apache-2.0
-from typing import cast
+from typing import Optional, Any, cast
 
 from pdkmaster.technology import property_ as _prp, primitive as _prm
 from pdkmaster.design import circuit as _ckt, layout as _lay, library as _lbry
@@ -46,10 +46,7 @@ stdcell1v2canvas = _fab.StdCellCanvas(
     m1_vssrail_width=1.12, m1_vddrail_width=1.12,
     well_edge_height=2.71,
 )
-stdcell1v2lib = _lbry.RoutingGaugeLibrary(
-    name="StdCell1V2Lib", tech=tech, routinggauge=stdcell1v2canvas.routinggauge,
-)
-StdCell1V2Factory(lib=stdcell1v2lib).add_default()
+# stdcell1v2lib is handled by __getattr__()
 
 
 class StdCell3V3Factory(_fab.StdCellFactory):
@@ -72,10 +69,7 @@ stdcell3v3canvas = _fab.StdCellCanvas(
     well_edge_height=3.4,
     inside=_activ.oxide[0], inside_enclosure=_activ.min_oxide_enclosure[0],
 )
-stdcell3v3lib = _lbry.RoutingGaugeLibrary(
-    name="StdCell3V3Lib", tech=tech, routinggauge=stdcell3v3canvas.routinggauge,
-)
-StdCell3V3Factory(lib=stdcell3v3lib).add_default()
+# stdcell3v3lib is handled by __getattr__()
 
 
 # Legacy dimensions based on lambda rules
@@ -94,10 +88,7 @@ stdcell1v2lambdacanvas = _fab.StdCellCanvas(
     tech=tech, **_fab.StdCellCanvas.compute_dimensions_lambda(lambda_=0.060),
     nmos=_nmos, pmos=_pmos,
 )
-stdcell1v2lambdalib = _lbry.RoutingGaugeLibrary(
-    name="StdCell1V2LambdaLib", tech=tech, routinggauge=stdcell1v2lambdacanvas.routinggauge,
-)
-StdCell1V2LambdaFactory(lib=stdcell1v2lambdalib).add_default()
+# stdcell1v2lambdalib is handled by __getattr__()
 
 
 class StdCell3V3LambdaFactory(_fab.StdCellFactory):
@@ -116,7 +107,51 @@ stdcell3v3lambdacanvas = _fab.StdCellCanvas(
     nmos=_ionmos, pmos=_iopmos,
     inside=_activ.oxide[0], inside_enclosure=_activ.min_oxide_enclosure[0],
 )
-stdcell3v3lambdalib = _lbry.RoutingGaugeLibrary(
-    name="StdCell3V3LambdaLib", tech=tech, routinggauge=stdcell3v3lambdacanvas.routinggauge,
-)
-StdCell3V3LambdaFactory(lib=stdcell3v3lambdalib).add_default()
+# stdcell3v3lambdalib is handled by __getattr__()
+
+
+_stdcell1v2lib: Optional[_lbry.RoutingGaugeLibrary] = None
+stdcell1v2lib: _lbry.RoutingGaugeLibrary
+_stdcell1v2lambdalib: Optional[_lbry.RoutingGaugeLibrary] = None
+stdcell1v2lambdalib: _lbry.RoutingGaugeLibrary
+_stdcell3v3lib: Optional[_lbry.RoutingGaugeLibrary] = None
+stdcell3v3lib: _lbry.RoutingGaugeLibrary
+_stdcell3v3lambdalib: Optional[_lbry.RoutingGaugeLibrary] = None
+stdcell3v3lambdalib: _lbry.RoutingGaugeLibrary
+def __getattr__(name: str) -> Any:
+    if name == "stdcell1v2lib":
+        global _stdcell1v2lib
+        if _stdcell1v2lib is None:
+            _stdcell1v2lib = _lbry.RoutingGaugeLibrary(
+                name="StdCell1V2Lib", tech=tech, routinggauge=stdcell1v2canvas.routinggauge,
+            )
+            StdCell1V2Factory(lib=_stdcell1v2lib).add_default()
+        return _stdcell1v2lib
+    elif name == "stdcell3v3lib":
+        global _stdcell3v3lib
+        if _stdcell3v3lib is None:
+            _stdcell3v3lib = _lbry.RoutingGaugeLibrary(
+                name="StdCell3V3Lib", tech=tech, routinggauge=stdcell3v3canvas.routinggauge,
+            )
+            StdCell3V3Factory(lib=_stdcell3v3lib).add_default()
+        return _stdcell3v3lib
+    if name == "stdcell1v2lambdalib":
+        global _stdcell1v2lambdalib
+        if _stdcell1v2lambdalib is None:
+            _stdcell1v2lambdalib = _lbry.RoutingGaugeLibrary(
+                name="StdCell1V2LambdaLib", tech=tech,
+                routinggauge=stdcell1v2lambdacanvas.routinggauge,
+            )
+            StdCell1V2Factory(lib=_stdcell1v2lambdalib).add_default()
+        return _stdcell1v2lambdalib
+    elif name == "stdcell3v3lambdalib":
+        global _stdcell3v3lambdalib
+        if _stdcell3v3lambdalib is None:
+            _stdcell3v3lambdalib = _lbry.RoutingGaugeLibrary(
+                name="StdCell3V3LambdaLib", tech=tech,
+                routinggauge=stdcell3v3lambdacanvas.routinggauge,
+            )
+            StdCell3V3Factory(lib=_stdcell3v3lambdalib).add_default()
+        return _stdcell3v3lambdalib
+    else:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -9,12 +9,12 @@ flat
 NWell = input(31, 0)
 pSD = input(14, 0)
 ThickGateOx = input(44, 0)
-GatPoly_pin = input(5, 2)
-GatPoly_obs = input(5, 100)
-GatPoly = input(5, 0)
 Activ_pin = input(1, 2)
 Activ_obs = input(1, 100)
 Activ = input(1, 0)
+GatPoly_pin = input(5, 2)
+GatPoly_obs = input(5, 100)
+GatPoly = input(5, 0)
 Metal1_pin = input(8, 2)
 Metal1_obs = input(8, 100)
 Metal1 = input(8, 0)
@@ -53,42 +53,42 @@ TopVia2 = input(133, 0)
 Substrate = input(40, 0)
 Passiv = input(9, 0)
 EXTBlock = input(111, 0)
+SalBlock = input(28, 0)
 Recog_dio = input(99, 31)
 RES = input(24, 0)
-SalBlock = input(28, 0)
 Recog_esd = input(99, 30)
 TEXT = input(63, 0)
 prBoundary = input(189, 0)
 substrate__IHPSG13G2 = (extent.sized(0.62)-NWell)
-GatPoly__conn = (GatPoly-(RES+SalBlock))
 Activ__conn = (Activ-GatPoly)
 Activ__conn__pSD = (Activ__conn&amp;pSD)
+GatPoly__conn = (GatPoly-(SalBlock+RES))
 gate__hvmosgate = (Activ&amp;GatPoly__conn&amp;ThickGateOx)
 gate__lvmosgate = (Activ&amp;GatPoly__conn&amp;(extent.sized(0.62)-ThickGateOx))
 gate__mosfet__sg13g2_hv_nmos = (gate__hvmosgate-NWell)
 gate__mosfet__sg13g2_hv_pmos = (gate__hvmosgate&amp;pSD&amp;NWell)
 gate__mosfet__sg13g2_lv_nmos = (gate__lvmosgate-NWell)
 gate__mosfet__sg13g2_lv_pmos = (gate__lvmosgate&amp;pSD&amp;NWell)
-resistor__Rsil = (GatPoly&amp;RES)
-indicators__resistor__Rsil = (RES)
-body__resistor__Rsil = (resistor__Rsil&amp;indicators__resistor__Rsil)
 resistor__Rppd = (GatPoly&amp;SalBlock&amp;pSD&amp;EXTBlock)
 indicators__resistor__Rppd = (SalBlock)
 body__resistor__Rppd = (resistor__Rppd&amp;indicators__resistor__Rppd)
+resistor__Rsil = (GatPoly&amp;RES)
+indicators__resistor__Rsil = (RES)
+body__resistor__Rsil = (resistor__Rsil&amp;indicators__resistor__Rsil)
 diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
 diode__ndiode = (Activ&amp;Recog_dio)
 
 # Connectivity
 # connect(substrate:IHPSG13G2,wafer)
 connect(substrate__IHPSG13G2, extent.sized(0.62))
-# connect(GatPoly,GatPoly.pin)
-connect(GatPoly, GatPoly_pin)
 # connect(Activ,Activ.pin)
 connect(Activ, Activ_pin)
 # connect(Activ__conn,Activ__conn:pSD)
 connect(Activ__conn, Activ__conn__pSD)
 # connect(Activ__conn:pSD,substrate:IHPSG13G2)
 connect(Activ__conn__pSD, substrate__IHPSG13G2)
+# connect(GatPoly,GatPoly.pin)
+connect(GatPoly, GatPoly_pin)
 # connect(Metal1,Metal1.pin)
 connect(Metal1, Metal1_pin)
 # connect(Metal2,Metal2.pin)
@@ -134,16 +134,16 @@ connect(TopMetal1, TopVia2)
 connect(TopVia2, TopMetal2)
 
 # Resistors
-# Rsil
-extract_devices(resistor("Rsil", 7.0), {
-    "R" =&gt; resistor__Rsil, "C" =&gt; GatPoly__conn,
-})
-same_device_classes("Rsil", "RES")
 # Rppd
 extract_devices(resistor("Rppd", 260.0), {
     "R" =&gt; resistor__Rppd, "C" =&gt; GatPoly__conn,
 })
 same_device_classes("Rppd", "RES")
+# Rsil
+extract_devices(resistor("Rsil", 7.0), {
+    "R" =&gt; resistor__Rsil, "C" =&gt; GatPoly__conn,
+})
+same_device_classes("Rsil", "RES")
 
 # Diodes
 # pdiode

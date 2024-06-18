@@ -6,7 +6,6 @@ from pdkmaster.technology import (
     property_ as _prp, primitive as _prm, technology_ as _tch
 )
 from pdkmaster.design import layout as lay, circuit as ckt
-from pdkmaster.io import notebook as nb
 
 __all__ = [
     "tech", "technology", "layoutfab", "layout_factory",

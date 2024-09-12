@@ -53,40 +53,68 @@ TopVia2 = input(133, 0)
 Substrate = input(40, 0)
 Passiv = input(9, 0)
 EXTBlock = input(111, 0)
-SalBlock = input(28, 0)
 Recog_dio = input(99, 31)
 RES = input(24, 0)
+SalBlock = input(28, 0)
 Recog_esd = input(99, 30)
 TEXT = input(63, 0)
 prBoundary = input(189, 0)
-substrate__IHPSG13G2 = (extent.sized(0.62)-NWell)
+
+# Derived layers
+# wafer.alias(_wafer)
+_wafer = extent.sized(0.31)
+# _wafer.remove(NWell).alias(substrate:IHPSG13G2)
+substrate__IHPSG13G2 = (_wafer-NWell)
+# Activ.remove(GatPoly).alias(Activ__conn)
 Activ__conn = (Activ-GatPoly)
+# intersect(Activ__conn,pSD).alias(Activ__conn:pSD)
 Activ__conn__pSD = (Activ__conn&amp;pSD)
-GatPoly__conn = (GatPoly-(SalBlock+RES))
+# Activ__conn.remove(pSD).alias(Activ__conn:bare)
+Activ__conn__bare = (Activ__conn-pSD)
+# GatPoly.remove(join(RES,SalBlock)).alias(GatPoly__conn)
+GatPoly__conn = (GatPoly-(RES+SalBlock))
+# intersect(Activ,GatPoly__conn,ThickGateOx).alias(gate:hvmosgate)
 gate__hvmosgate = (Activ&amp;GatPoly__conn&amp;ThickGateOx)
-gate__lvmosgate = (Activ&amp;GatPoly__conn&amp;(extent.sized(0.62)-ThickGateOx))
+# intersect(Activ,GatPoly__conn,_wafer.remove(ThickGateOx)).alias(gate:lvmosgate)
+gate__lvmosgate = (Activ&amp;GatPoly__conn&amp;(_wafer-ThickGateOx))
+# gate:hvmosgate.remove(NWell).alias(gate:mosfet:sg13g2_hv_nmos)
 gate__mosfet__sg13g2_hv_nmos = (gate__hvmosgate-NWell)
+# intersect(gate:hvmosgate,pSD,NWell).alias(gate:mosfet:sg13g2_hv_pmos)
 gate__mosfet__sg13g2_hv_pmos = (gate__hvmosgate&amp;pSD&amp;NWell)
+# gate:lvmosgate.remove(NWell).alias(gate:mosfet:sg13g2_lv_nmos)
 gate__mosfet__sg13g2_lv_nmos = (gate__lvmosgate-NWell)
+# intersect(gate:lvmosgate,pSD,NWell).alias(gate:mosfet:sg13g2_lv_pmos)
 gate__mosfet__sg13g2_lv_pmos = (gate__lvmosgate&amp;pSD&amp;NWell)
+# intersect(GatPoly,SalBlock,pSD,EXTBlock).alias(resistor:Rppd)
 resistor__Rppd = (GatPoly&amp;SalBlock&amp;pSD&amp;EXTBlock)
+# intersect(SalBlock).alias(indicators:resistor:Rppd)
 indicators__resistor__Rppd = (SalBlock)
+# intersect(resistor:Rppd,indicators:resistor:Rppd).alias(body:resistor:Rppd)
 body__resistor__Rppd = (resistor__Rppd&amp;indicators__resistor__Rppd)
+# intersect(GatPoly,RES).alias(resistor:Rsil)
 resistor__Rsil = (GatPoly&amp;RES)
+# intersect(RES).alias(indicators:resistor:Rsil)
 indicators__resistor__Rsil = (RES)
+# intersect(resistor:Rsil,indicators:resistor:Rsil).alias(body:resistor:Rsil)
 body__resistor__Rsil = (resistor__Rsil&amp;indicators__resistor__Rsil)
-diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
+# intersect(Activ,Recog.dio).alias(diode:ndiode)
 diode__ndiode = (Activ&amp;Recog_dio)
+# intersect(Activ,Recog.dio,pSD).alias(diode:pdiode)
+diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
 
 # Connectivity
-# connect(substrate:IHPSG13G2,wafer)
-connect(substrate__IHPSG13G2, extent.sized(0.62))
+# connect(substrate:IHPSG13G2,_wafer)
+connect(substrate__IHPSG13G2, _wafer)
 # connect(Activ,Activ.pin)
 connect(Activ, Activ_pin)
 # connect(Activ__conn,Activ__conn:pSD)
 connect(Activ__conn, Activ__conn__pSD)
 # connect(Activ__conn:pSD,substrate:IHPSG13G2)
 connect(Activ__conn__pSD, substrate__IHPSG13G2)
+# connect(Activ__conn,Activ__conn:bare)
+connect(Activ__conn, Activ__conn__bare)
+# connect(Activ__conn:bare,NWell)
+connect(Activ__conn__bare, NWell)
 # connect(GatPoly,GatPoly.pin)
 connect(GatPoly, GatPoly_pin)
 # connect(Metal1,Metal1.pin)
@@ -138,21 +166,21 @@ connect(TopVia2, TopMetal2)
 extract_devices(resistor("Rppd", 260.0), {
     "R" =&gt; resistor__Rppd, "C" =&gt; GatPoly__conn,
 })
-same_device_classes("Rppd", "RES")
+same_device_classes("Rppd", "rppd")
 # Rsil
 extract_devices(resistor("Rsil", 7.0), {
     "R" =&gt; resistor__Rsil, "C" =&gt; GatPoly__conn,
 })
-same_device_classes("Rsil", "RES")
+same_device_classes("Rsil", "rsil")
 
 # Diodes
+# ndiode
+extract_devices(diode("dantenna"), {
+    "P" =&gt; substrate__IHPSG13G2, "N" =&gt; diode__ndiode, "tC" =&gt; Activ__conn
+})
 # pdiode
 extract_devices(diode("dpantenna"), {
     "P" =&gt; diode__pdiode, "N" =&gt; NWell, "tA" =&gt; Activ__conn
-})
-# ndiode
-extract_devices(diode("dantenna"), {
-    "P" =&gt; diode__ndiode, "N" =&gt; substrate__IHPSG13G2, "tA" =&gt; Activ__conn
 })
 
 # Transistors

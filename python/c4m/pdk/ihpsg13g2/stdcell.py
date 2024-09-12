@@ -10,10 +10,8 @@ from c4m.flexcell import factory as _fab
 from .pdkmaster import tech, cktfab, layoutfab
 
 __all__ = [
-    "stdcell1v2canvas", "StdCell1V2Factory", "stdcell1v2lib",
+    "stdcellcanvas", "StdCellFactory", "stdcelllib",
     "stdcell3v3canvas", "StdCell3V3Factory", "stdcell3v3lib",
-    "stdcell1v2lambdacanvas", "StdCell1V2LambdaFactory", "stdcell1v2lambdalib",
-    "stdcell3v3lambdacanvas", "StdCell3V3LambdaFactory", "stdcell3v3lambdalib",
 ]
 
 prims = tech.primitives
@@ -27,26 +25,26 @@ _iopmos = cast(_prm.MOSFET, prims["sg13g2_hv_pmos"])
 
 
 # standard cell libraries with minimum dimensions
-class StdCell1V2Factory(_fab.StdCellFactory):
+class StdCellFactory(_fab.StdCellFactory):
     def __init__(self, *,
         lib: _lbry.RoutingGaugeLibrary, name_prefix: str = "", name_suffix: str = "",
     ):
         super().__init__(
             lib=lib, cktfab=cktfab, layoutfab=layoutfab,
             name_prefix=name_prefix, name_suffix=name_suffix,
-            canvas=stdcell1v2canvas,
+            canvas=stdcellcanvas,
         )
 
 
-stdcell1v2canvas = _fab.StdCellCanvas(
+stdcellcanvas = _fab.StdCellCanvas(
     tech=tech,
-    nmos=_nmos, nmos_min_w=0.76,
-    pmos=_pmos, pmos_min_w=0.76,
-    cell_height=5.5, cell_horplacement_grid=0.80,
+    nmos=_nmos, nmos_min_w=0.78,
+    pmos=_pmos, pmos_min_w=0.78,
+    cell_height=5.71, cell_horplacement_grid=0.80,
     m1_vssrail_width=1.12, m1_vddrail_width=1.12,
-    well_edge_height=2.71,
+    well_edge_height=2.86,
 )
-# stdcell1v2lib is handled by __getattr__()
+# stdcelllib is handled by __getattr__()
 
 
 class StdCell3V3Factory(_fab.StdCellFactory):
@@ -72,61 +70,19 @@ stdcell3v3canvas = _fab.StdCellCanvas(
 # stdcell3v3lib is handled by __getattr__()
 
 
-# Legacy dimensions based on lambda rules
-class StdCell1V2LambdaFactory(_fab.StdCellFactory):
-    def __init__(self, *,
-        lib: _lbry.RoutingGaugeLibrary, name_prefix: str = "", name_suffix: str = "",
-    ):
-        super().__init__(
-            lib=lib, cktfab=cktfab, layoutfab=layoutfab,
-            name_prefix=name_prefix, name_suffix=name_suffix,
-            canvas=stdcell1v2lambdacanvas,
-        )
-
-
-stdcell1v2lambdacanvas = _fab.StdCellCanvas(
-    tech=tech, **_fab.StdCellCanvas.compute_dimensions_lambda(lambda_=0.060),
-    nmos=_nmos, pmos=_pmos,
-)
-# stdcell1v2lambdalib is handled by __getattr__()
-
-
-class StdCell3V3LambdaFactory(_fab.StdCellFactory):
-    def __init__(self, *,
-        lib: _lbry.RoutingGaugeLibrary, name_prefix: str = "", name_suffix: str = "",
-    ):
-        super().__init__(
-            lib=lib, cktfab=cktfab, layoutfab=layoutfab,
-            name_prefix=name_prefix, name_suffix=name_suffix,
-            canvas=stdcell3v3lambdacanvas,
-        )
-
-
-stdcell3v3lambdacanvas = _fab.StdCellCanvas(
-    tech=tech, **_fab.StdCellCanvas.compute_dimensions_lambda(lambda_=0.06),
-    nmos=_ionmos, pmos=_iopmos,
-    inside=_activ.oxide[0], inside_enclosure=_activ.min_oxide_enclosure[0],
-)
-# stdcell3v3lambdalib is handled by __getattr__()
-
-
-_stdcell1v2lib: Optional[_lbry.RoutingGaugeLibrary] = None
-stdcell1v2lib: _lbry.RoutingGaugeLibrary
-_stdcell1v2lambdalib: Optional[_lbry.RoutingGaugeLibrary] = None
-stdcell1v2lambdalib: _lbry.RoutingGaugeLibrary
+_stdcelllib: Optional[_lbry.RoutingGaugeLibrary] = None
+stdcelllib: _lbry.RoutingGaugeLibrary
 _stdcell3v3lib: Optional[_lbry.RoutingGaugeLibrary] = None
 stdcell3v3lib: _lbry.RoutingGaugeLibrary
-_stdcell3v3lambdalib: Optional[_lbry.RoutingGaugeLibrary] = None
-stdcell3v3lambdalib: _lbry.RoutingGaugeLibrary
 def __getattr__(name: str) -> Any:
-    if name == "stdcell1v2lib":
-        global _stdcell1v2lib
-        if _stdcell1v2lib is None:
-            _stdcell1v2lib = _lbry.RoutingGaugeLibrary(
-                name="StdCell1V2Lib", tech=tech, routinggauge=stdcell1v2canvas.routinggauge,
+    if name == "stdcelllib":
+        global _stdcelllib
+        if _stdcelllib is None:
+            _stdcelllib = _lbry.RoutingGaugeLibrary(
+                name="StdCellLib", tech=tech, routinggauge=stdcellcanvas.routinggauge,
             )
-            StdCell1V2Factory(lib=_stdcell1v2lib).add_default()
-        return _stdcell1v2lib
+            StdCellFactory(lib=_stdcelllib).add_default()
+        return _stdcelllib
     elif name == "stdcell3v3lib":
         global _stdcell3v3lib
         if _stdcell3v3lib is None:
@@ -135,23 +91,5 @@ def __getattr__(name: str) -> Any:
             )
             StdCell3V3Factory(lib=_stdcell3v3lib).add_default()
         return _stdcell3v3lib
-    if name == "stdcell1v2lambdalib":
-        global _stdcell1v2lambdalib
-        if _stdcell1v2lambdalib is None:
-            _stdcell1v2lambdalib = _lbry.RoutingGaugeLibrary(
-                name="StdCell1V2LambdaLib", tech=tech,
-                routinggauge=stdcell1v2lambdacanvas.routinggauge,
-            )
-            StdCell1V2Factory(lib=_stdcell1v2lambdalib).add_default()
-        return _stdcell1v2lambdalib
-    elif name == "stdcell3v3lambdalib":
-        global _stdcell3v3lambdalib
-        if _stdcell3v3lambdalib is None:
-            _stdcell3v3lambdalib = _lbry.RoutingGaugeLibrary(
-                name="StdCell3V3LambdaLib", tech=tech,
-                routinggauge=stdcell3v3lambdacanvas.routinggauge,
-            )
-            StdCell3V3Factory(lib=_stdcell3v3lambdalib).add_default()
-        return _stdcell3v3lambdalib
     else:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

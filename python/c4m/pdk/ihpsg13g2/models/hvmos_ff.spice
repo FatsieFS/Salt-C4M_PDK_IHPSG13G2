@@ -1,0 +1,2 @@
+* hvmos_ff corner
+.lib "cornerMOShv.lib" mos_ff

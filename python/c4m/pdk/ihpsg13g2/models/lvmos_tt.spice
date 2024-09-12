@@ -1,0 +1,2 @@
+* lvmos_tt corner
+.lib "cornerMOSlv.lib" mos_tt

@@ -5,13 +5,14 @@ from functools import partial
 from pdkmaster.technology import property_ as _prp, geometry as _geo, primitive as _prm
 from pdkmaster.design import cell as _cell, circuit as _ckt, layout as _lay, library as _lbry
 
+from c4m.flexcell import factory as _stdfab
 from c4m.flexio import (
     DCDiodeT, IOSpecification, TrackSpecification, IOFrameSpecification,
     GuardRingT, PadOutT, PadTriOutT, PadInOutT, FactoryCellT, IOFactory,
 )
 
 from .pdkmaster import tech, cktfab, layoutfab
-from .stdcell import stdcell1v2canvas, StdCell1V2LambdaFactory
+from .stdcell import _nmos, _pmos
 from ._io_compliance import (
     guardring_create, dcdiode_create, PadIn, PadOut, PadTriOut, PadInOut,
 )
@@ -25,18 +26,35 @@ __all__ = [
 _prims = tech.primitives
 
 
-# Make own libary for standard cells with prefixed names
-_stdlib = _lbry.RoutingGaugeLibrary(
-    name="sg13g2_io_stdcells", tech=tech, routinggauge=stdcell1v2canvas.routinggauge
+class _IOStdCellFactory(_stdfab.StdCellFactory):
+    def __init__(self, *,
+        lib: _lbry.RoutingGaugeLibrary, name_prefix: str = "", name_suffix: str = "",
+    ):
+        super().__init__(
+            lib=lib, cktfab=cktfab, layoutfab=layoutfab,
+            name_prefix=name_prefix, name_suffix=name_suffix,
+            canvas=_iostdcellcanvas,
+        )
+
+
+_iostdcellcanvas = _stdfab.StdCellCanvas(
+    tech=tech, **_stdfab.StdCellCanvas.compute_dimensions_lambda(lambda_=0.060),
+    nmos=_nmos, pmos=_pmos,
 )
-_stdfab = StdCell1V2LambdaFactory(lib=_stdlib, name_prefix="sg13g2_io_")
+
+
+# Make own libary for standard cells with prefixed names
+_iostdlib = _lbry.RoutingGaugeLibrary(
+    name="sg13g2_io_stdcells", tech=tech, routinggauge=_iostdcellcanvas.routinggauge
+)
+_iostdfab = _IOStdCellFactory(lib=_iostdlib, name_prefix="sg13g2_io_")
 # TODO: change it so .add_default() is not needed
-_stdfab.add_default()
+_iostdfab.add_default()
 
 _cell_width = 80.0
 _cell_height = 180.0
 ihpsg13g2_iospec = IOSpecification(
-    stdcellfab=_stdfab,
+    stdcellfab=_iostdfab,
     nmos=cast(_prm.MOSFET, _prims.sg13g2_lv_nmos), pmos=cast(_prm.MOSFET, _prims.sg13g2_lv_pmos),
     ionmos=cast(_prm.MOSFET, _prims.sg13g2_hv_nmos),
     iopmos=cast(_prm.MOSFET, _prims.sg13g2_hv_pmos),
@@ -63,7 +81,7 @@ ihpsg13g2_iospec = IOSpecification(
     corerow_height=10, corerow_nwell_height=6,
     iorow_height=8.5, iorow_nwell_height=5.25,
     nwell_minspace=2.0, levelup_core_space=1.0,
-    resvdd_prim=cast(_prm.Resistor, _prims.Rppd), resvdd_meander=False,
+    resvdd_prim=cast(_prm.Resistor, _prims.Rppd),
     resvdd_w=1.0, resvdd_lfinger=20.0, resvdd_fingers=26, resvdd_space=0.65,
     invvdd_n_mosfet=cast(_prm.MOSFET, _prims.sg13g2_hv_nmos),
     invvdd_n_l=0.5, invvdd_n_w=9.0, invvdd_n_fingers=6, invvdd_n_rows=2,

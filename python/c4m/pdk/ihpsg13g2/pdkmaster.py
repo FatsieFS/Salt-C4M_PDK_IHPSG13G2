@@ -92,15 +92,21 @@ class _IHPSG13G2(_tch.Technology):
             name="Activ", pin=pin_prims["Activ"], blockage=obs_prims["Activ"],
             min_width=0.15, # Act.a
             min_space=0.21, # Act.b
+            min_area=0.122, # Act.d
+            # min_hole_area=0.15, # Act.e
             allow_in_substrate=True, well=NWell, implant=pSD,
             min_implant_enclosure=_prp.Enclosure(0.18), # pSD.c
             implant_abut="none",
             allow_contactless_implant=False,
             # TODO: switch back minimum well enclosure for core cells
-            # min_well_enclosure=_prp.Enclosure(0.31), # NW.c
-            min_well_enclosure=_prp.Enclosure(0.62), # NW.c1
-            # min_substrate_enclosure=_prp.Enclosure(0.31), # NW.d
-            min_substrate_enclosure=_prp.Enclosure(0.62), # NW.d1
+            min_well_enclosure=_prp.Enclosure(0.31), # NW.c
+            min_well_enclosure4oxide={
+                ThickGateOx: _prp.Enclosure(0.62), # NW.c1
+            },
+            min_substrate_enclosure=_prp.Enclosure(0.31), # NW.d
+            min_substrate_enclosure4oxide={
+                ThickGateOx: _prp.Enclosure(0.62), # NW.d1
+            },
             min_well_enclosure_same_type=_prp.Enclosure(0.03), # pSD.d1
             min_substrate_enclosure_same_type=_prp.Enclosure(0.03), # pSD.sc1
             allow_well_crossing=False,
@@ -127,7 +133,7 @@ class _IHPSG13G2(_tch.Technology):
                         ((0.3, 1.0), 0.22), # M1.e
                         ((10.0, 10.0), 0.60), # M1.f
                     ),
-                    "min_area": 0.144 # M1.d
+                    "min_area": 0.09 # M1.d
                     # IHP will do dummy insertion
                     # "min_density": 0.35, # M1.j
                     # "max_density": 0.60, # M1.k
@@ -431,7 +437,7 @@ gds_layers: GDSLayerSpecDict = {
     "Recog.esd": (99, 30),
     "Recog.dio": (99, 31),
 }
-textgds_layers: Dict[str, Tuple[int, int]] = {}
+textgds_layers: GDSLayerSpecDict = {}
 
 # Use datatype 100 for obstruction layer;
 # datatype 23 'nofill' would cause no dummy generation if accidently not removed before tape-out

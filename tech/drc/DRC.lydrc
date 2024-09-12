@@ -47,6 +47,8 @@ def dens_check(output, input, min, max)
     tp.execute("Density check")
 end
 
+deep
+
 # Define layers
 NWell = input(31, 0)
 pSD = input(14, 0)
@@ -95,9 +97,9 @@ TopVia2 = input(133, 0)
 Substrate = input(40, 0)
 Passiv = input(9, 0)
 EXTBlock = input(111, 0)
-SalBlock = input(28, 0)
 Recog_dio = input(99, 31)
 RES = input(24, 0)
+SalBlock = input(28, 0)
 Recog_esd = input(99, 30)
 TEXT = input(63, 0)
 prBoundary = input(189, 0)
@@ -244,14 +246,14 @@ Passiv.ongrid(0.005).output(
 EXTBlock.ongrid(0.005).output(
     "EXTBlock grid", "EXTBlock grid: 0.005µm"
 )
-SalBlock.ongrid(0.005).output(
-    "SalBlock grid", "SalBlock grid: 0.005µm"
-)
 Recog_dio.ongrid(0.005).output(
     "Recog_dio grid", "Recog_dio grid: 0.005µm"
 )
 RES.ongrid(0.005).output(
     "RES grid", "RES grid: 0.005µm"
+)
+SalBlock.ongrid(0.005).output(
+    "SalBlock grid", "SalBlock grid: 0.005µm"
 )
 Recog_esd.ongrid(0.005).output(
     "Recog_esd grid", "Recog_esd grid: 0.005µm"
@@ -264,18 +266,22 @@ prBoundary.ongrid(0.005).output(
 )
 
 # Derived layers
-# wafer.remove(NWell).alias(substrate:IHPSG13G2)
-substrate__IHPSG13G2 = (extent.sized(0.62)-NWell)
+# wafer.alias(_wafer)
+_wafer = extent.sized(0.31)
+# _wafer.remove(NWell).alias(substrate:IHPSG13G2)
+substrate__IHPSG13G2 = (_wafer-NWell)
 # Activ.remove(GatPoly).alias(Activ__conn)
 Activ__conn = (Activ-GatPoly)
 # intersect(Activ__conn,pSD).alias(Activ__conn:pSD)
 Activ__conn__pSD = (Activ__conn&amp;pSD)
-# GatPoly.remove(join(SalBlock,RES)).alias(GatPoly__conn)
-GatPoly__conn = (GatPoly-(SalBlock+RES))
+# Activ__conn.remove(pSD).alias(Activ__conn:bare)
+Activ__conn__bare = (Activ__conn-pSD)
+# GatPoly.remove(join(RES,SalBlock)).alias(GatPoly__conn)
+GatPoly__conn = (GatPoly-(RES+SalBlock))
 # intersect(Activ,GatPoly__conn,ThickGateOx).alias(gate:hvmosgate)
 gate__hvmosgate = (Activ&amp;GatPoly__conn&amp;ThickGateOx)
-# intersect(Activ,GatPoly__conn,wafer.remove(ThickGateOx)).alias(gate:lvmosgate)
-gate__lvmosgate = (Activ&amp;GatPoly__conn&amp;(extent.sized(0.62)-ThickGateOx))
+# intersect(Activ,GatPoly__conn,_wafer.remove(ThickGateOx)).alias(gate:lvmosgate)
+gate__lvmosgate = (Activ&amp;GatPoly__conn&amp;(_wafer-ThickGateOx))
 # gate:hvmosgate.remove(NWell).alias(gate:mosfet:sg13g2_hv_nmos)
 gate__mosfet__sg13g2_hv_nmos = (gate__hvmosgate-NWell)
 # intersect(gate:hvmosgate,pSD,NWell).alias(gate:mosfet:sg13g2_hv_pmos)
@@ -296,20 +302,24 @@ resistor__Rsil = (GatPoly&amp;RES)
 indicators__resistor__Rsil = (RES)
 # intersect(resistor:Rsil,indicators:resistor:Rsil).alias(body:resistor:Rsil)
 body__resistor__Rsil = (resistor__Rsil&amp;indicators__resistor__Rsil)
-# intersect(Activ,Recog.dio,pSD).alias(diode:pdiode)
-diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
 # intersect(Activ,Recog.dio).alias(diode:ndiode)
 diode__ndiode = (Activ&amp;Recog_dio)
+# intersect(Activ,Recog.dio,pSD).alias(diode:pdiode)
+diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
 
 # Connectivity
-# connect(substrate:IHPSG13G2,wafer)
-connect(substrate__IHPSG13G2, extent.sized(0.62))
+# connect(substrate:IHPSG13G2,_wafer)
+connect(substrate__IHPSG13G2, _wafer)
 # connect(Activ,Activ.pin)
 connect(Activ, Activ_pin)
 # connect(Activ__conn,Activ__conn:pSD)
 connect(Activ__conn, Activ__conn__pSD)
 # connect(Activ__conn:pSD,substrate:IHPSG13G2)
 connect(Activ__conn__pSD, substrate__IHPSG13G2)
+# connect(Activ__conn,Activ__conn:bare)
+connect(Activ__conn, Activ__conn__bare)
+# connect(Activ__conn:bare,NWell)
+connect(Activ__conn__bare, NWell)
 # connect(GatPoly,GatPoly.pin)
 connect(GatPoly, GatPoly_pin)
 # connect(Metal1,Metal1.pin)
@@ -393,6 +403,10 @@ Activ.width(0.15).output(
 Activ.space(0.21).output(
     "Activ space", "Activ minimum space: 0.21µm"
 )
+# Activ.area &gt;= 0.122
+Activ.with_area(nil, 0.122).output(
+    "Activ area", "Activ minimum area: 0.122µm"
+)
 # edge(pSD).interact_with(Activ).length == 0
 pSD.edges.interacting(Activ).output("pSD.edges.interacting(Activ) empty")
 # Activ.enclosed_by(pSD) &gt;= Enclosure(0.18)
@@ -400,15 +414,25 @@ pSD.enclosing(Activ, 0.18).output(
     "pSD:Activ enclosure",
     "Minimum enclosure of pSD around Activ: 0.18µm"
 )
-# intersect(Activ,pSD).enclosed_by(NWell) &gt;= Enclosure(0.62)
-NWell.enclosing((Activ&amp;pSD), 0.62).output(
+# intersect(Activ,pSD).enclosed_by(NWell) &gt;= Enclosure(0.31)
+NWell.enclosing((Activ&amp;pSD), 0.31).output(
     "NWell:(Activ&amp;pSD) enclosure",
-    "Minimum enclosure of NWell around (Activ&amp;pSD): 0.62µm"
+    "Minimum enclosure of NWell around (Activ&amp;pSD): 0.31µm"
+)
+# intersect(Activ,ThickGateOx).enclosed_by(NWell) &gt;= Enclosure(0.62)
+NWell.enclosing((Activ&amp;ThickGateOx), 0.62).output(
+    "NWell:(Activ&amp;ThickGateOx) enclosure",
+    "Minimum enclosure of NWell around (Activ&amp;ThickGateOx): 0.62µm"
 )
 # intersect(Activ,pSD).enclosed_by(substrate:IHPSG13G2) &gt;= Enclosure(0.03)
 substrate__IHPSG13G2.enclosing((Activ&amp;pSD), 0.03).output(
     "substrate__IHPSG13G2:(Activ&amp;pSD) enclosure",
     "Minimum enclosure of substrate__IHPSG13G2 around (Activ&amp;pSD): 0.03µm"
+)
+# intersect(Activ,ThickGateOx).enclosed_by(substrate:IHPSG13G2) &gt;= Enclosure(0.62)
+substrate__IHPSG13G2.enclosing((Activ&amp;ThickGateOx), 0.62).output(
+    "substrate__IHPSG13G2:(Activ&amp;ThickGateOx) enclosure",
+    "Minimum enclosure of substrate__IHPSG13G2 around (Activ&amp;ThickGateOx): 0.62µm"
 )
 # Activ.enclosed_by(ThickGateOx) &gt;= Enclosure(0.27)
 ThickGateOx.enclosing(Activ, 0.27).output(
@@ -437,9 +461,9 @@ Metal1.width(0.16).output(
 Metal1.space(0.18).output(
     "Metal1 space", "Metal1 minimum space: 0.18µm"
 )
-# Metal1.area &gt;= 0.144
-Metal1.with_area(nil, 0.144).output(
-    "Metal1 area", "Metal1 minimum area: 0.144µm"
+# Metal1.area &gt;= 0.09
+Metal1.with_area(nil, 0.09).output(
+    "Metal1 area", "Metal1 minimum area: 0.09µm"
 )
 # space(Metal1.parts_with(Metal1.width &gt;= 0.3,Metal1.length &gt;= 1.0),Metal1) &gt;= 0.22
 space4width_check(Metal1, 0.3, 0.22).output(
@@ -862,6 +886,15 @@ EXTBlock.enclosing(resistor__Rppd, 0.18).output(
 (RES-GatPoly).width(0.0).output(
     "(RES-GatPoly) width", "(RES-GatPoly) minimum width: 0.0µm"
 )
+# diode:ndiode.width &gt;= 0.48
+diode__ndiode.width(0.48).output(
+    "diode__ndiode width", "diode__ndiode minimum width: 0.48µm"
+)
+# Activ.enclosed_by(Recog.dio) &gt;= Enclosure(0.02)
+Recog_dio.enclosing(Activ, 0.02).output(
+    "Recog_dio:Activ enclosure",
+    "Minimum enclosure of Recog_dio around Activ: 0.02µm"
+)
 # diode:pdiode.width &gt;= 0.48
 diode__pdiode.width(0.48).output(
     "diode__pdiode width", "diode__pdiode minimum width: 0.48µm"
@@ -876,19 +909,15 @@ pSD.enclosing(diode__pdiode, 0.18).output(
     "pSD:diode__pdiode enclosure",
     "Minimum enclosure of pSD around diode__pdiode: 0.18µm"
 )
-# diode:ndiode.width &gt;= 0.48
-diode__ndiode.width(0.48).output(
-    "diode__ndiode width", "diode__ndiode minimum width: 0.48µm"
-)
-# Activ.enclosed_by(Recog.dio) &gt;= Enclosure(0.02)
-Recog_dio.enclosing(Activ, 0.02).output(
-    "Recog_dio:Activ enclosure",
-    "Minimum enclosure of Recog_dio around Activ: 0.02µm"
-)
 # space(Activ,ThickGateOx) &gt;= 0.27
 Activ.separation(ThickGateOx, 0.27, square).output(
     "Activ:ThickGateOx spacing",
     "Minimum spacing between Activ and ThickGateOx: 0.27µm"
+)
+# space(NWell,Activ) &gt;= 0.24
+NWell.separation(Activ, 0.24, square).output(
+    "NWell:Activ spacing",
+    "Minimum spacing between NWell and Activ: 0.24µm"
 )
 # space(SalBlock,Activ) &gt;= 0.2
 SalBlock.separation(Activ, 0.2, square).output(
@@ -905,44 +934,39 @@ SalBlock.separation(Cont, 0.2, square).output(
     "SalBlock:Cont spacing",
     "Minimum spacing between SalBlock and Cont: 0.2µm"
 )
-# space(gate:mosfet:sg13g2_lv_nmos,pSD) &gt;= 0.3
-gate__mosfet__sg13g2_lv_nmos.separation(pSD, 0.3, square).output(
-    "gate__mosfet__sg13g2_lv_nmos:pSD spacing",
-    "Minimum spacing between gate__mosfet__sg13g2_lv_nmos and pSD: 0.3µm"
-)
-# space(Activ,GatPoly) &gt;= 0.07
-Activ.separation(GatPoly, 0.07, square).output(
-    "Activ:GatPoly spacing",
-    "Minimum spacing between Activ and GatPoly: 0.07µm"
-)
-# space(EXTBlock,pSD) &gt;= 0.31
-EXTBlock.separation(pSD, 0.31, square).output(
-    "EXTBlock:pSD spacing",
-    "Minimum spacing between EXTBlock and pSD: 0.31µm"
-)
-# space(NWell,Activ) &gt;= 0.24
-NWell.separation(Activ, 0.24, square).output(
-    "NWell:Activ spacing",
-    "Minimum spacing between NWell and Activ: 0.24µm"
-)
-# space(GatPoly,EXTBlock) &gt;= 0.18
-GatPoly.separation(EXTBlock, 0.18, square).output(
-    "GatPoly:EXTBlock spacing",
-    "Minimum spacing between GatPoly and EXTBlock: 0.18µm"
+# space(Activ,pSD) &gt;= 0.18
+Activ.separation(pSD, 0.18, square).output(
+    "Activ:pSD spacing",
+    "Minimum spacing between Activ and pSD: 0.18µm"
 )
 # space(Cont,Activ) &gt;= 0.14
 Cont.separation(Activ, 0.14, square).output(
     "Cont:Activ spacing",
     "Minimum spacing between Cont and Activ: 0.14µm"
 )
+# space(EXTBlock,pSD) &gt;= 0.31
+EXTBlock.separation(pSD, 0.31, square).output(
+    "EXTBlock:pSD spacing",
+    "Minimum spacing between EXTBlock and pSD: 0.31µm"
+)
+# space(Activ,GatPoly) &gt;= 0.07
+Activ.separation(GatPoly, 0.07, square).output(
+    "Activ:GatPoly spacing",
+    "Minimum spacing between Activ and GatPoly: 0.07µm"
+)
+# space(GatPoly,EXTBlock) &gt;= 0.18
+GatPoly.separation(EXTBlock, 0.18, square).output(
+    "GatPoly:EXTBlock spacing",
+    "Minimum spacing between GatPoly and EXTBlock: 0.18µm"
+)
+# space(gate:mosfet:sg13g2_lv_nmos,pSD) &gt;= 0.3
+gate__mosfet__sg13g2_lv_nmos.separation(pSD, 0.3, square).output(
+    "gate__mosfet__sg13g2_lv_nmos:pSD spacing",
+    "Minimum spacing between gate__mosfet__sg13g2_lv_nmos and pSD: 0.3µm"
+)
 # space(gate:mosfet:sg13g2_hv_nmos,pSD) &gt;= 0.4
 gate__mosfet__sg13g2_hv_nmos.separation(pSD, 0.4, square).output(
     "gate__mosfet__sg13g2_hv_nmos:pSD spacing",
     "Minimum spacing between gate__mosfet__sg13g2_hv_nmos and pSD: 0.4µm"
-)
-# space(Activ,pSD) &gt;= 0.18
-Activ.separation(pSD, 0.18, square).output(
-    "Activ:pSD spacing",
-    "Minimum spacing between Activ and pSD: 0.18µm"
 )
 </text></klayout-macro>

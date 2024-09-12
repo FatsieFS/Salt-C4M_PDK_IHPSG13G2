@@ -7,6 +7,7 @@ from pdkmaster.design import library as _lbry
 from c4m.flexcell import factory as _stdfab
 
 from .pdkmaster import *
+from .spice import *
 from .pyspice import *
 from .klayout import register_primlib as pya_register_primlib
 
@@ -20,18 +21,12 @@ from .pyspice import __all__ as _pyspice_all
 from .stdcell import __all__ as _stdcell_all
 from .io import __all__ as _io_all
 
-stdcell1v2canvas: _stdfab.StdCellCanvas
-StdCell1V2Factory: type
-stdcell1v2lib: _lbry.RoutingGaugeLibrary
+stdcellcanvas: _stdfab.StdCellCanvas
+StdCellFactory: type
+stdcelllib: _lbry.RoutingGaugeLibrary
 stdcell3v3canvas: _stdfab.StdCellCanvas
 StdCell3V3Factory: type
 stdcell3v3lib: _lbry.RoutingGaugeLibrary
-stdcell1v2lambdacanvas: _stdfab.StdCellCanvas
-StdCell1V2LamdaFactory: type
-stdcell1v2lamdalib: _lbry.RoutingGaugeLibrary
-stdcell3v3lamdacanvas: _stdfab.StdCellCanvas
-StdCell3V3LamdaFactory: type
-stdcell3v3lambdalib: _lbry.RoutingGaugeLibrary
 libs: Iterable[_lbry.Library]
 def __getattr__(name: str) -> Any:
     if name in _stdcell_all:
@@ -41,14 +36,9 @@ def __getattr__(name: str) -> Any:
         io = import_module(".io", __name__)
         return getattr(io, name)
     elif name == "libs":
-        from .stdcell import (
-            stdcell1v2lib, stdcell1v2lambdalib, stdcell3v3lib, stdcell3v3lambdalib,
-        )
+        from .stdcell import stdcelllib, stdcell3v3lib
         from .io import iolib
-        return [
-            stdcell1v2lib, stdcell1v2lambdalib, stdcell3v3lib, stdcell3v3lambdalib,
-            iolib,
-        ]
+        return [stdcelllib, stdcell3v3lib, iolib]
     else:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

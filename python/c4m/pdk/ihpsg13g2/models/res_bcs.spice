@@ -1,0 +1,2 @@
+* res_bcs corner
+.lib "cornerRES.lib" mos_bcs

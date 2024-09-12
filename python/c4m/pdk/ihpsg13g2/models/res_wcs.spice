@@ -1,0 +1,2 @@
+* res_wcs corner
+.lib "cornerRES.lib" mos_wcs

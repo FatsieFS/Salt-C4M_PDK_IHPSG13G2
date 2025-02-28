@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR GPL-2.0-or-later OR CERN-OHL-S-2.0+ OR Apache-2.0
-from typing import Tuple, Dict, cast
+from typing import Dict, cast
 
 from pdkmaster.typing import GDSLayerSpecDict
 from pdkmaster.technology import (
@@ -8,8 +8,8 @@ from pdkmaster.technology import (
 from pdkmaster.design import layout as lay, circuit as ckt
 
 __all__ = [
-    "tech", "technology", "layoutfab", "layout_factory",
-    "cktfab", "circuit_factory", "gds_layers", "textgds_layers", #"plotter",
+    "tech", "layoutfab", "cktfab",
+    "gds_layers", "textgds_layers",
 ]
 
 
@@ -32,7 +32,7 @@ class _IHPSG13G2(_tch.Technology):
                 "Activ", "GatPoly",
                 *(f"Metal{n}" for n in range(1, 5 + 1)),
                 *(f"TopMetal{n}" for n in range(1, 2 + 1)),
-                # "Passiv",
+                "Passiv",
             )
         }
         prims += pin_prims.values()
@@ -96,6 +96,7 @@ class _IHPSG13G2(_tch.Technology):
             # min_hole_area=0.15, # Act.e
             allow_in_substrate=True, well=NWell, implant=pSD,
             min_implant_enclosure=_prp.Enclosure(0.18), # pSD.c
+            min_implant_enclosure_same_type=_prp.Enclosure(0.03), # pSD.c1
             implant_abut="none",
             allow_contactless_implant=False,
             # TODO: switch back minimum well enclosure for core cells
@@ -196,7 +197,7 @@ class _IHPSG13G2(_tch.Technology):
                         _prp.Enclosure(0.07), # Cnt.c
                         _prp.Enclosure(0.07), # Cnt.d
                     ),
-                    "min_top_enclosure": _prp.Enclosure((0.000, 0.080)), # li.5.-
+                    "min_top_enclosure": _prp.Enclosure((0.000, 0.050)), # M1.c/c1
                 },
                 {
                     "name": "Via1",
@@ -245,15 +246,18 @@ class _IHPSG13G2(_tch.Technology):
             )
         }
         Passiv = _prm.PadOpening(
-            name="Passiv", #pin=pin_prims["Passiv"],
-            # TODO: Can min_width be reduced ?
-            min_width=40.000, # Own rule
+            name="Passiv", pin=pin_prims["Passiv"],
+            # We use the recommended rules inside dfpad here
+            min_width=30.000, # Pad.aR
             # min_width=2.1, # Pas.a
-            min_space=3.5, # Pas.b
+            min_space=8.40, # Pad.bR
+            # min_space=3.5, # Pas.b
             bottom=metals["TopMetal2"],
             min_bottom_enclosure=_prp.Enclosure(2.1), # Pas.c
         )
-        prims += (*vias.values(), Passiv)
+        dfpad = _prm.Auxiliary(name="dfpad")
+        # TODO: extra rules inside dfpad
+        prims += (*vias.values(), Passiv, dfpad)
 
         # misc using wires
         prims += (
@@ -272,6 +276,9 @@ class _IHPSG13G2(_tch.Technology):
             ),
             _prm.Spacing( # Cnt.e
                 primitives1=vias["Cont"], primitives2=Activ, min_space=0.14,
+            ),
+            _prm.Spacing( # Cnt.f
+                primitives1=vias["Cont"], primitives2=GatPoly, min_space=0.11,
             ),
             _prm.Spacing( # Sal.d
                 primitives1=SalBlock, primitives2=(Activ, GatPoly, vias["Cont"]),
@@ -389,10 +396,14 @@ class _IHPSG13G2(_tch.Technology):
         # not used in another primitive
         prims += _prm.Auxiliary(name="Recog.esd")
 
+        # SRAM
+        prims += _prm.Auxiliary(name="SRAM")
+        # TODO: extra/relaxed rules inside SRAM layer
+
         super().__init__(primitives=prims)
 
-tech = technology = _IHPSG13G2()
-cktfab = circuit_factory = ckt.CircuitFactory(tech=tech)
+tech: _tch.Technology = _IHPSG13G2()
+cktfab = ckt.CircuitFactory(tech=tech)
 
 def _primlayout_cb(*, layout: lay.LayoutT, prim: _prm.PrimitiveT, **prim_args):
     from pdkmaster.technology import geometry as _geo
@@ -431,7 +442,7 @@ def _primlayout_cb(*, layout: lay.LayoutT, prim: _prm.PrimitiveT, **prim_args):
             shape=_geo.Label(origin=_geo.origin, text=lbl),
         )
         layout.add_shape(shape=ms, net=None)
-layoutfab = layout_factory = lay.LayoutFactory(tech=tech, create_cb=_primlayout_cb)
+layoutfab = lay.LayoutFactory(tech=tech, create_cb=_primlayout_cb)
 
 gds_layers: GDSLayerSpecDict = {
     "Recog.esd": (99, 30),
@@ -451,11 +462,13 @@ for name, layer, has_pin, has_obs, has_pintext in (
     ("pSD", 14, False, False, False),
     ("Via1", 19, False, True, False),
     ("RES", 24, False, False, False),
+    ("SRAM", 25, False, False, False),
     ("SalBlock", 28, False, False, False),
     ("Via2", 29, False, True, False),
     ("Metal3", 30, True, True, True),
     ("NWell", 31, False, False, False),
     ("Substrate", 40, False, False, False),
+    ("dfpad", 41, False, False, False),
     ("ThickGateOx", 44, False, False, False),
     ("Via3", 49, False, True, False),
     ("Metal4", 50, True, True, True),

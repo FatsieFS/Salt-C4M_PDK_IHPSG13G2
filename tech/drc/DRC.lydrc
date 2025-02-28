@@ -16,8 +16,8 @@ def space4width_check(layer, w, s)
 end
 
 def space4widthlength_check(layer, w, l, s)
-    big = layer.sized(-0.5*w).size(0.5*w)
-    big.edges.separation(layer.edges, s).with_length(l + 1.dbu, nil)
+    big_edges = layer.sized(-0.5*w).size(0.5*w).edges
+    big_edges.separation(layer.edges, s, Projection).with_length(l + 1.dbu, nil)
 end
 
 def oppenc_check(inner, outer, min, max)
@@ -53,31 +53,45 @@ deep
 NWell = input(31, 0)
 pSD = input(14, 0)
 ThickGateOx = input(44, 0)
-Activ_pin = input(1, 2)
-Activ_obs = input(1, 100)
-Activ = input(1, 0)
 GatPoly_pin = input(5, 2)
 GatPoly_obs = input(5, 100)
 GatPoly = input(5, 0)
+Activ_pin = input(1, 2)
+Activ_obs = input(1, 100)
+Activ = input(1, 0)
 Metal1_pin = input(8, 2)
+Metal1_pin_text = input(8, 25)
+connect(Metal1_pin, Metal1_pin_text)
 Metal1_obs = input(8, 100)
 Metal1 = input(8, 0)
 Metal2_pin = input(10, 2)
+Metal2_pin_text = input(10, 25)
+connect(Metal2_pin, Metal2_pin_text)
 Metal2_obs = input(10, 100)
 Metal2 = input(10, 0)
 Metal3_pin = input(30, 2)
+Metal3_pin_text = input(30, 25)
+connect(Metal3_pin, Metal3_pin_text)
 Metal3_obs = input(30, 100)
 Metal3 = input(30, 0)
 Metal4_pin = input(50, 2)
+Metal4_pin_text = input(50, 25)
+connect(Metal4_pin, Metal4_pin_text)
 Metal4_obs = input(50, 100)
 Metal4 = input(50, 0)
 Metal5_pin = input(67, 2)
+Metal5_pin_text = input(67, 25)
+connect(Metal5_pin, Metal5_pin_text)
 Metal5_obs = input(67, 100)
 Metal5 = input(67, 0)
 TopMetal1_pin = input(126, 2)
+TopMetal1_pin_text = input(126, 25)
+connect(TopMetal1_pin, TopMetal1_pin_text)
 TopMetal1_obs = input(126, 100)
 TopMetal1 = input(126, 0)
 TopMetal2_pin = input(134, 2)
+TopMetal2_pin_text = input(134, 25)
+connect(TopMetal2_pin, TopMetal2_pin_text)
 TopMetal2_obs = input(134, 100)
 TopMetal2 = input(134, 0)
 Cont_obs = input(6, 100)
@@ -96,12 +110,15 @@ TopVia1 = input(125, 0)
 TopVia2 = input(133, 0)
 Substrate = input(40, 0)
 Passiv = input(9, 0)
+Passiv_pin = input(9, 2)
 EXTBlock = input(111, 0)
-Recog_dio = input(99, 31)
 RES = input(24, 0)
 SalBlock = input(28, 0)
+Recog_dio = input(99, 31)
 Recog_esd = input(99, 30)
+SRAM = input(25, 0)
 TEXT = input(63, 0)
+dfpad = input(41, 0)
 prBoundary = input(189, 0)
 
 # Grid check
@@ -114,15 +131,6 @@ pSD.ongrid(0.005).output(
 ThickGateOx.ongrid(0.005).output(
     "ThickGateOx grid", "ThickGateOx grid: 0.005µm"
 )
-Activ_pin.ongrid(0.005).output(
-    "Activ_pin grid", "Activ_pin grid: 0.005µm"
-)
-Activ_obs.ongrid(0.005).output(
-    "Activ_obs grid", "Activ_obs grid: 0.005µm"
-)
-Activ.ongrid(0.005).output(
-    "Activ grid", "Activ grid: 0.005µm"
-)
 GatPoly_pin.ongrid(0.005).output(
     "GatPoly_pin grid", "GatPoly_pin grid: 0.005µm"
 )
@@ -131,6 +139,15 @@ GatPoly_obs.ongrid(0.005).output(
 )
 GatPoly.ongrid(0.005).output(
     "GatPoly grid", "GatPoly grid: 0.005µm"
+)
+Activ_pin.ongrid(0.005).output(
+    "Activ_pin grid", "Activ_pin grid: 0.005µm"
+)
+Activ_obs.ongrid(0.005).output(
+    "Activ_obs grid", "Activ_obs grid: 0.005µm"
+)
+Activ.ongrid(0.005).output(
+    "Activ grid", "Activ grid: 0.005µm"
 )
 Metal1_pin.ongrid(0.005).output(
     "Metal1_pin grid", "Metal1_pin grid: 0.005µm"
@@ -243,11 +260,11 @@ Substrate.ongrid(0.005).output(
 Passiv.ongrid(0.005).output(
     "Passiv grid", "Passiv grid: 0.005µm"
 )
+Passiv_pin.ongrid(0.005).output(
+    "Passiv_pin grid", "Passiv_pin grid: 0.005µm"
+)
 EXTBlock.ongrid(0.005).output(
     "EXTBlock grid", "EXTBlock grid: 0.005µm"
-)
-Recog_dio.ongrid(0.005).output(
-    "Recog_dio grid", "Recog_dio grid: 0.005µm"
 )
 RES.ongrid(0.005).output(
     "RES grid", "RES grid: 0.005µm"
@@ -255,11 +272,20 @@ RES.ongrid(0.005).output(
 SalBlock.ongrid(0.005).output(
     "SalBlock grid", "SalBlock grid: 0.005µm"
 )
+Recog_dio.ongrid(0.005).output(
+    "Recog_dio grid", "Recog_dio grid: 0.005µm"
+)
 Recog_esd.ongrid(0.005).output(
     "Recog_esd grid", "Recog_esd grid: 0.005µm"
 )
+SRAM.ongrid(0.005).output(
+    "SRAM grid", "SRAM grid: 0.005µm"
+)
 TEXT.ongrid(0.005).output(
     "TEXT grid", "TEXT grid: 0.005µm"
+)
+dfpad.ongrid(0.005).output(
+    "dfpad grid", "dfpad grid: 0.005µm"
 )
 prBoundary.ongrid(0.005).output(
     "prBoundary grid", "prBoundary grid: 0.005µm"
@@ -270,14 +296,14 @@ prBoundary.ongrid(0.005).output(
 _wafer = extent.sized(0.31)
 # _wafer.remove(NWell).alias(substrate:IHPSG13G2)
 substrate__IHPSG13G2 = (_wafer-NWell)
+# GatPoly.remove(join(RES,SalBlock)).alias(GatPoly__conn)
+GatPoly__conn = (GatPoly-(RES+SalBlock))
 # Activ.remove(GatPoly).alias(Activ__conn)
 Activ__conn = (Activ-GatPoly)
 # intersect(Activ__conn,pSD).alias(Activ__conn:pSD)
 Activ__conn__pSD = (Activ__conn&amp;pSD)
 # Activ__conn.remove(pSD).alias(Activ__conn:bare)
 Activ__conn__bare = (Activ__conn-pSD)
-# GatPoly.remove(join(RES,SalBlock)).alias(GatPoly__conn)
-GatPoly__conn = (GatPoly-(RES+SalBlock))
 # intersect(Activ,GatPoly__conn,ThickGateOx).alias(gate:hvmosgate)
 gate__hvmosgate = (Activ&amp;GatPoly__conn&amp;ThickGateOx)
 # intersect(Activ,GatPoly__conn,_wafer.remove(ThickGateOx)).alias(gate:lvmosgate)
@@ -290,26 +316,28 @@ gate__mosfet__sg13g2_hv_pmos = (gate__hvmosgate&amp;pSD&amp;NWell)
 gate__mosfet__sg13g2_lv_nmos = (gate__lvmosgate-NWell)
 # intersect(gate:lvmosgate,pSD,NWell).alias(gate:mosfet:sg13g2_lv_pmos)
 gate__mosfet__sg13g2_lv_pmos = (gate__lvmosgate&amp;pSD&amp;NWell)
-# intersect(GatPoly,SalBlock,pSD,EXTBlock).alias(resistor:Rppd)
-resistor__Rppd = (GatPoly&amp;SalBlock&amp;pSD&amp;EXTBlock)
-# intersect(SalBlock).alias(indicators:resistor:Rppd)
-indicators__resistor__Rppd = (SalBlock)
-# intersect(resistor:Rppd,indicators:resistor:Rppd).alias(body:resistor:Rppd)
-body__resistor__Rppd = (resistor__Rppd&amp;indicators__resistor__Rppd)
 # intersect(GatPoly,RES).alias(resistor:Rsil)
 resistor__Rsil = (GatPoly&amp;RES)
 # intersect(RES).alias(indicators:resistor:Rsil)
 indicators__resistor__Rsil = (RES)
 # intersect(resistor:Rsil,indicators:resistor:Rsil).alias(body:resistor:Rsil)
 body__resistor__Rsil = (resistor__Rsil&amp;indicators__resistor__Rsil)
-# intersect(Activ,Recog.dio).alias(diode:ndiode)
-diode__ndiode = (Activ&amp;Recog_dio)
+# intersect(GatPoly,SalBlock,pSD,EXTBlock).alias(resistor:Rppd)
+resistor__Rppd = (GatPoly&amp;SalBlock&amp;pSD&amp;EXTBlock)
+# intersect(SalBlock).alias(indicators:resistor:Rppd)
+indicators__resistor__Rppd = (SalBlock)
+# intersect(resistor:Rppd,indicators:resistor:Rppd).alias(body:resistor:Rppd)
+body__resistor__Rppd = (resistor__Rppd&amp;indicators__resistor__Rppd)
 # intersect(Activ,Recog.dio,pSD).alias(diode:pdiode)
 diode__pdiode = (Activ&amp;Recog_dio&amp;pSD)
+# intersect(Activ,Recog.dio).alias(diode:ndiode)
+diode__ndiode = (Activ&amp;Recog_dio)
 
 # Connectivity
 # connect(substrate:IHPSG13G2,_wafer)
 connect(substrate__IHPSG13G2, _wafer)
+# connect(GatPoly,GatPoly.pin)
+connect(GatPoly, GatPoly_pin)
 # connect(Activ,Activ.pin)
 connect(Activ, Activ_pin)
 # connect(Activ__conn,Activ__conn:pSD)
@@ -320,8 +348,6 @@ connect(Activ__conn__pSD, substrate__IHPSG13G2)
 connect(Activ__conn, Activ__conn__bare)
 # connect(Activ__conn:bare,NWell)
 connect(Activ__conn__bare, NWell)
-# connect(GatPoly,GatPoly.pin)
-connect(GatPoly, GatPoly_pin)
 # connect(Metal1,Metal1.pin)
 connect(Metal1, Metal1_pin)
 # connect(Metal2,Metal2.pin)
@@ -365,6 +391,10 @@ connect(TopVia1, TopMetal1)
 connect(TopMetal1, TopVia2)
 # connect(TopVia2,TopMetal2)
 connect(TopVia2, TopMetal2)
+# connect(Passiv,Passiv.pin)
+connect(Passiv, Passiv_pin)
+# connect(TopMetal2,Passiv)
+connect(TopMetal2, Passiv)
 
 # DRC rules
 # NWell.width &gt;= 0.62
@@ -395,6 +425,18 @@ ThickGateOx.width(0.86).output(
 ThickGateOx.space(0.86).output(
     "ThickGateOx space", "ThickGateOx minimum space: 0.86µm"
 )
+# GatPoly.width &gt;= 0.13
+GatPoly.width(0.13).output(
+    "GatPoly width", "GatPoly minimum width: 0.13µm"
+)
+# GatPoly.space &gt;= 0.18
+GatPoly.space(0.18).output(
+    "GatPoly space", "GatPoly minimum space: 0.18µm"
+)
+# GatPoly.area &gt;= 0.09
+GatPoly.with_area(nil, 0.09).output(
+    "GatPoly area", "GatPoly minimum area: 0.09µm"
+)
 # Activ.width &gt;= 0.15
 Activ.width(0.15).output(
     "Activ width", "Activ minimum width: 0.15µm"
@@ -409,10 +451,15 @@ Activ.with_area(nil, 0.122).output(
 )
 # edge(pSD).interact_with(Activ).length == 0
 pSD.edges.interacting(Activ).output("pSD.edges.interacting(Activ) empty")
-# Activ.enclosed_by(pSD) &gt;= Enclosure(0.18)
-pSD.enclosing(Activ, 0.18).output(
-    "pSD:Activ enclosure",
-    "Minimum enclosure of pSD around Activ: 0.18µm"
+# intersect(Activ,NWell).enclosed_by(pSD) &gt;= Enclosure(0.18)
+pSD.enclosing((Activ&amp;NWell), 0.18).output(
+    "pSD:(Activ&amp;NWell) enclosure",
+    "Minimum enclosure of pSD around (Activ&amp;NWell): 0.18µm"
+)
+# intersect(Activ,substrate:IHPSG13G2).enclosed_by(pSD) &gt;= Enclosure(0.03)
+pSD.enclosing((Activ&amp;substrate__IHPSG13G2), 0.03).output(
+    "pSD:(Activ&amp;substrate__IHPSG13G2) enclosure",
+    "Minimum enclosure of pSD around (Activ&amp;substrate__IHPSG13G2): 0.03µm"
 )
 # intersect(Activ,pSD).enclosed_by(NWell) &gt;= Enclosure(0.31)
 NWell.enclosing((Activ&amp;pSD), 0.31).output(
@@ -441,18 +488,6 @@ ThickGateOx.enclosing(Activ, 0.27).output(
 )
 # edge(Activ).interact_with(edge(NWell)).length == 0
 Activ.edges.interacting(NWell.edges).output("Activ.edges.interacting(NWell.edges) empty")
-# GatPoly.width &gt;= 0.13
-GatPoly.width(0.13).output(
-    "GatPoly width", "GatPoly minimum width: 0.13µm"
-)
-# GatPoly.space &gt;= 0.18
-GatPoly.space(0.18).output(
-    "GatPoly space", "GatPoly minimum space: 0.18µm"
-)
-# GatPoly.area &gt;= 0.09
-GatPoly.with_area(nil, 0.09).output(
-    "GatPoly area", "GatPoly minimum area: 0.09µm"
-)
 # Metal1.width &gt;= 0.16
 Metal1.width(0.16).output(
     "Metal1 width", "Metal1 minimum width: 0.16µm"
@@ -467,20 +502,20 @@ Metal1.with_area(nil, 0.09).output(
 )
 # space(Metal1.parts_with(Metal1.width &gt;= 0.3,Metal1.length &gt;= 1.0),Metal1) &gt;= 0.22
 space4width_check(Metal1, 0.3, 0.22).output(
-    "[Warning]Metal1 table spacing",
-    "Check minimum Metal1 spacing for 0.3µm width and 1.0µm length: 0.22µm"
+    "[Warning]Metal1 spacetable[0.3]",
+    "Minimum Metal1 spacing for 0.3µm width and 1.0µm length: 0.22µm"
 )
 space4widthlength_check(Metal1, 0.3, 1.0, 0.22).output(
-    "Metal1 table spacing",
+    "Metal1 spacetable[0.3,1.0]",
     "Minimum Metal1 spacing for 0.3µm width and 1.0µm length: 0.22µm"
 )
 # space(Metal1.parts_with(Metal1.width &gt;= 10.0,Metal1.length &gt;= 10.0),Metal1) &gt;= 0.6
 space4width_check(Metal1, 10.0, 0.6).output(
-    "[Warning]Metal1 table spacing",
-    "Check minimum Metal1 spacing for 10.0µm width and 10.0µm length: 0.6µm"
+    "[Warning]Metal1 spacetable[10.0]",
+    "Minimum Metal1 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 space4widthlength_check(Metal1, 10.0, 10.0, 0.6).output(
-    "Metal1 table spacing",
+    "Metal1 spacetable[10.0,10.0]",
     "Minimum Metal1 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 # Metal2.width &gt;= 0.2
@@ -497,20 +532,20 @@ Metal2.with_area(nil, 0.144).output(
 )
 # space(Metal2.parts_with(Metal2.width &gt;= 0.39,Metal2.length &gt;= 1.0),Metal2) &gt;= 0.24
 space4width_check(Metal2, 0.39, 0.24).output(
-    "[Warning]Metal2 table spacing",
-    "Check minimum Metal2 spacing for 0.39µm width and 1.0µm length: 0.24µm"
+    "[Warning]Metal2 spacetable[0.39]",
+    "Minimum Metal2 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 space4widthlength_check(Metal2, 0.39, 1.0, 0.24).output(
-    "Metal2 table spacing",
+    "Metal2 spacetable[0.39,1.0]",
     "Minimum Metal2 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 # space(Metal2.parts_with(Metal2.width &gt;= 10.0,Metal2.length &gt;= 10.0),Metal2) &gt;= 0.6
 space4width_check(Metal2, 10.0, 0.6).output(
-    "[Warning]Metal2 table spacing",
-    "Check minimum Metal2 spacing for 10.0µm width and 10.0µm length: 0.6µm"
+    "[Warning]Metal2 spacetable[10.0]",
+    "Minimum Metal2 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 space4widthlength_check(Metal2, 10.0, 10.0, 0.6).output(
-    "Metal2 table spacing",
+    "Metal2 spacetable[10.0,10.0]",
     "Minimum Metal2 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 # Metal3.width &gt;= 0.2
@@ -527,20 +562,20 @@ Metal3.with_area(nil, 0.144).output(
 )
 # space(Metal3.parts_with(Metal3.width &gt;= 0.39,Metal3.length &gt;= 1.0),Metal3) &gt;= 0.24
 space4width_check(Metal3, 0.39, 0.24).output(
-    "[Warning]Metal3 table spacing",
-    "Check minimum Metal3 spacing for 0.39µm width and 1.0µm length: 0.24µm"
+    "[Warning]Metal3 spacetable[0.39]",
+    "Minimum Metal3 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 space4widthlength_check(Metal3, 0.39, 1.0, 0.24).output(
-    "Metal3 table spacing",
+    "Metal3 spacetable[0.39,1.0]",
     "Minimum Metal3 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 # space(Metal3.parts_with(Metal3.width &gt;= 10.0,Metal3.length &gt;= 10.0),Metal3) &gt;= 0.6
 space4width_check(Metal3, 10.0, 0.6).output(
-    "[Warning]Metal3 table spacing",
-    "Check minimum Metal3 spacing for 10.0µm width and 10.0µm length: 0.6µm"
+    "[Warning]Metal3 spacetable[10.0]",
+    "Minimum Metal3 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 space4widthlength_check(Metal3, 10.0, 10.0, 0.6).output(
-    "Metal3 table spacing",
+    "Metal3 spacetable[10.0,10.0]",
     "Minimum Metal3 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 # Metal4.width &gt;= 0.2
@@ -557,20 +592,20 @@ Metal4.with_area(nil, 0.144).output(
 )
 # space(Metal4.parts_with(Metal4.width &gt;= 0.39,Metal4.length &gt;= 1.0),Metal4) &gt;= 0.24
 space4width_check(Metal4, 0.39, 0.24).output(
-    "[Warning]Metal4 table spacing",
-    "Check minimum Metal4 spacing for 0.39µm width and 1.0µm length: 0.24µm"
+    "[Warning]Metal4 spacetable[0.39]",
+    "Minimum Metal4 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 space4widthlength_check(Metal4, 0.39, 1.0, 0.24).output(
-    "Metal4 table spacing",
+    "Metal4 spacetable[0.39,1.0]",
     "Minimum Metal4 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 # space(Metal4.parts_with(Metal4.width &gt;= 10.0,Metal4.length &gt;= 10.0),Metal4) &gt;= 0.6
 space4width_check(Metal4, 10.0, 0.6).output(
-    "[Warning]Metal4 table spacing",
-    "Check minimum Metal4 spacing for 10.0µm width and 10.0µm length: 0.6µm"
+    "[Warning]Metal4 spacetable[10.0]",
+    "Minimum Metal4 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 space4widthlength_check(Metal4, 10.0, 10.0, 0.6).output(
-    "Metal4 table spacing",
+    "Metal4 spacetable[10.0,10.0]",
     "Minimum Metal4 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 # Metal5.width &gt;= 0.2
@@ -587,20 +622,20 @@ Metal5.with_area(nil, 0.144).output(
 )
 # space(Metal5.parts_with(Metal5.width &gt;= 0.39,Metal5.length &gt;= 1.0),Metal5) &gt;= 0.24
 space4width_check(Metal5, 0.39, 0.24).output(
-    "[Warning]Metal5 table spacing",
-    "Check minimum Metal5 spacing for 0.39µm width and 1.0µm length: 0.24µm"
+    "[Warning]Metal5 spacetable[0.39]",
+    "Minimum Metal5 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 space4widthlength_check(Metal5, 0.39, 1.0, 0.24).output(
-    "Metal5 table spacing",
+    "Metal5 spacetable[0.39,1.0]",
     "Minimum Metal5 spacing for 0.39µm width and 1.0µm length: 0.24µm"
 )
 # space(Metal5.parts_with(Metal5.width &gt;= 10.0,Metal5.length &gt;= 10.0),Metal5) &gt;= 0.6
 space4width_check(Metal5, 10.0, 0.6).output(
-    "[Warning]Metal5 table spacing",
-    "Check minimum Metal5 spacing for 10.0µm width and 10.0µm length: 0.6µm"
+    "[Warning]Metal5 spacetable[10.0]",
+    "Minimum Metal5 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 space4widthlength_check(Metal5, 10.0, 10.0, 0.6).output(
-    "Metal5 table spacing",
+    "Metal5 spacetable[10.0,10.0]",
     "Minimum Metal5 spacing for 10.0µm width and 10.0µm length: 0.6µm"
 )
 # TopMetal1.width &gt;= 1.64
@@ -621,11 +656,11 @@ TopMetal2.space(2.0).output(
 )
 # space(TopMetal2.parts_with(TopMetal2.width &gt;= 5.0,TopMetal2.length &gt;= 50.0),TopMetal2) &gt;= 5.0
 space4width_check(TopMetal2, 5.0, 5.0).output(
-    "[Warning]TopMetal2 table spacing",
-    "Check minimum TopMetal2 spacing for 5.0µm width and 50.0µm length: 5.0µm"
+    "[Warning]TopMetal2 spacetable[5.0]",
+    "Minimum TopMetal2 spacing for 5.0µm width and 50.0µm length: 5.0µm"
 )
 space4widthlength_check(TopMetal2, 5.0, 50.0, 5.0).output(
-    "TopMetal2 table spacing",
+    "TopMetal2 spacetable[5.0,50.0]",
     "Minimum TopMetal2 spacing for 5.0µm width and 50.0µm length: 5.0µm"
 )
 # Cont.width == 0.16
@@ -646,10 +681,10 @@ GatPoly.enclosing(Cont, 0.07).output(
     "GatPoly:Cont enclosure",
     "Minimum enclosure of GatPoly around Cont: 0.07µm"
 )
-# Cont.enclosed_by(Metal1) &gt;= Enclosure((0.0,0.08))
-oppenc_check(Cont, Metal1, 0.0, 0.08).output(
+# Cont.enclosed_by(Metal1) &gt;= Enclosure((0.0,0.05))
+oppenc_check(Cont, Metal1, 0.0, 0.05).output(
     "Metal1:Cont asymmetric enclosure",
-    "Minimum enclosure of Metal1 around Cont: 0.0µm minimum, 0.08µm opposite"
+    "Minimum enclosure of Metal1 around Cont: 0.0µm minimum, 0.05µm opposite"
 )
 # Via1.width == 0.19
 width_check(Via1, 0.19).output(
@@ -819,13 +854,13 @@ pSD.enclosing(gate__mosfet__sg13g2_lv_pmos, 0.3).output(
     "pSD:gate__mosfet__sg13g2_lv_pmos enclosure",
     "Minimum enclosure of pSD around gate__mosfet__sg13g2_lv_pmos: 0.3µm"
 )
-# Passiv.width &gt;= 40.0
-Passiv.width(40.0).output(
-    "Passiv width", "Passiv minimum width: 40.0µm"
+# Passiv.width &gt;= 30.0
+Passiv.width(30.0).output(
+    "Passiv width", "Passiv minimum width: 30.0µm"
 )
-# Passiv.space &gt;= 3.5
-Passiv.space(3.5).output(
-    "Passiv space", "Passiv minimum space: 3.5µm"
+# Passiv.space &gt;= 8.4
+Passiv.space(8.4).output(
+    "Passiv space", "Passiv minimum space: 8.4µm"
 )
 # Passiv.enclosed_by(TopMetal2) &gt;= Enclosure(2.1)
 TopMetal2.enclosing(Passiv, 2.1).output(
@@ -847,6 +882,20 @@ SalBlock.width(0.42).output(
 # SalBlock.space &gt;= 0.42
 SalBlock.space(0.42).output(
     "SalBlock space", "SalBlock minimum space: 0.42µm"
+)
+# intersect(edge(body:resistor:Rsil),edge(indicators:resistor:Rsil)).length &gt;= 0.5
+(body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges).with_length(nil, 0.5).output(
+    "(body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges) length",
+    "Minimum length of (body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges): 0.5µm"
+)
+# intersect(edge(body:resistor:Rsil),edge(GatPoly)).length &gt;= 0.5
+(body__resistor__Rsil.edges&amp;GatPoly.edges).with_length(nil, 0.5).output(
+    "(body__resistor__Rsil.edges&amp;GatPoly.edges) length",
+    "Minimum length of (body__resistor__Rsil.edges&amp;GatPoly.edges): 0.5µm"
+)
+# RES.remove(GatPoly).width &gt;= 0.0
+(RES-GatPoly).width(0.0).output(
+    "(RES-GatPoly) width", "(RES-GatPoly) minimum width: 0.0µm"
 )
 # intersect(edge(body:resistor:Rppd),edge(indicators:resistor:Rppd)).length &gt;= 0.5
 (body__resistor__Rppd.edges&amp;indicators__resistor__Rppd.edges).with_length(nil, 0.5).output(
@@ -872,29 +921,6 @@ EXTBlock.enclosing(resistor__Rppd, 0.18).output(
     "EXTBlock:resistor__Rppd enclosure",
     "Minimum enclosure of EXTBlock around resistor__Rppd: 0.18µm"
 )
-# intersect(edge(body:resistor:Rsil),edge(indicators:resistor:Rsil)).length &gt;= 0.5
-(body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges).with_length(nil, 0.5).output(
-    "(body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges) length",
-    "Minimum length of (body__resistor__Rsil.edges&amp;indicators__resistor__Rsil.edges): 0.5µm"
-)
-# intersect(edge(body:resistor:Rsil),edge(GatPoly)).length &gt;= 0.5
-(body__resistor__Rsil.edges&amp;GatPoly.edges).with_length(nil, 0.5).output(
-    "(body__resistor__Rsil.edges&amp;GatPoly.edges) length",
-    "Minimum length of (body__resistor__Rsil.edges&amp;GatPoly.edges): 0.5µm"
-)
-# RES.remove(GatPoly).width &gt;= 0.0
-(RES-GatPoly).width(0.0).output(
-    "(RES-GatPoly) width", "(RES-GatPoly) minimum width: 0.0µm"
-)
-# diode:ndiode.width &gt;= 0.48
-diode__ndiode.width(0.48).output(
-    "diode__ndiode width", "diode__ndiode minimum width: 0.48µm"
-)
-# Activ.enclosed_by(Recog.dio) &gt;= Enclosure(0.02)
-Recog_dio.enclosing(Activ, 0.02).output(
-    "Recog_dio:Activ enclosure",
-    "Minimum enclosure of Recog_dio around Activ: 0.02µm"
-)
 # diode:pdiode.width &gt;= 0.48
 diode__pdiode.width(0.48).output(
     "diode__pdiode width", "diode__pdiode minimum width: 0.48µm"
@@ -909,15 +935,54 @@ pSD.enclosing(diode__pdiode, 0.18).output(
     "pSD:diode__pdiode enclosure",
     "Minimum enclosure of pSD around diode__pdiode: 0.18µm"
 )
-# space(Activ,ThickGateOx) &gt;= 0.27
-Activ.separation(ThickGateOx, 0.27, square).output(
-    "Activ:ThickGateOx spacing",
-    "Minimum spacing between Activ and ThickGateOx: 0.27µm"
+# diode:ndiode.width &gt;= 0.48
+diode__ndiode.width(0.48).output(
+    "diode__ndiode width", "diode__ndiode minimum width: 0.48µm"
+)
+# Activ.enclosed_by(Recog.dio) &gt;= Enclosure(0.02)
+Recog_dio.enclosing(Activ, 0.02).output(
+    "Recog_dio:Activ enclosure",
+    "Minimum enclosure of Recog_dio around Activ: 0.02µm"
+)
+# space(Activ,GatPoly) &gt;= 0.07
+Activ.separation(GatPoly, 0.07, square).output(
+    "Activ:GatPoly spacing",
+    "Minimum spacing between Activ and GatPoly: 0.07µm"
 )
 # space(NWell,Activ) &gt;= 0.24
 NWell.separation(Activ, 0.24, square).output(
     "NWell:Activ spacing",
     "Minimum spacing between NWell and Activ: 0.24µm"
+)
+# space(Activ,ThickGateOx) &gt;= 0.27
+Activ.separation(ThickGateOx, 0.27, square).output(
+    "Activ:ThickGateOx spacing",
+    "Minimum spacing between Activ and ThickGateOx: 0.27µm"
+)
+# space(Cont,GatPoly) &gt;= 0.11
+Cont.separation(GatPoly, 0.11, square).output(
+    "Cont:GatPoly spacing",
+    "Minimum spacing between Cont and GatPoly: 0.11µm"
+)
+# space(EXTBlock,pSD) &gt;= 0.31
+EXTBlock.separation(pSD, 0.31, square).output(
+    "EXTBlock:pSD spacing",
+    "Minimum spacing between EXTBlock and pSD: 0.31µm"
+)
+# space(GatPoly,EXTBlock) &gt;= 0.18
+GatPoly.separation(EXTBlock, 0.18, square).output(
+    "GatPoly:EXTBlock spacing",
+    "Minimum spacing between GatPoly and EXTBlock: 0.18µm"
+)
+# space(Activ,pSD) &gt;= 0.18
+Activ.separation(pSD, 0.18, square).output(
+    "Activ:pSD spacing",
+    "Minimum spacing between Activ and pSD: 0.18µm"
+)
+# space(Cont,Activ) &gt;= 0.14
+Cont.separation(Activ, 0.14, square).output(
+    "Cont:Activ spacing",
+    "Minimum spacing between Cont and Activ: 0.14µm"
 )
 # space(SalBlock,Activ) &gt;= 0.2
 SalBlock.separation(Activ, 0.2, square).output(
@@ -934,39 +999,14 @@ SalBlock.separation(Cont, 0.2, square).output(
     "SalBlock:Cont spacing",
     "Minimum spacing between SalBlock and Cont: 0.2µm"
 )
-# space(Activ,pSD) &gt;= 0.18
-Activ.separation(pSD, 0.18, square).output(
-    "Activ:pSD spacing",
-    "Minimum spacing between Activ and pSD: 0.18µm"
-)
-# space(Cont,Activ) &gt;= 0.14
-Cont.separation(Activ, 0.14, square).output(
-    "Cont:Activ spacing",
-    "Minimum spacing between Cont and Activ: 0.14µm"
-)
-# space(EXTBlock,pSD) &gt;= 0.31
-EXTBlock.separation(pSD, 0.31, square).output(
-    "EXTBlock:pSD spacing",
-    "Minimum spacing between EXTBlock and pSD: 0.31µm"
-)
-# space(Activ,GatPoly) &gt;= 0.07
-Activ.separation(GatPoly, 0.07, square).output(
-    "Activ:GatPoly spacing",
-    "Minimum spacing between Activ and GatPoly: 0.07µm"
-)
-# space(GatPoly,EXTBlock) &gt;= 0.18
-GatPoly.separation(EXTBlock, 0.18, square).output(
-    "GatPoly:EXTBlock spacing",
-    "Minimum spacing between GatPoly and EXTBlock: 0.18µm"
+# space(gate:mosfet:sg13g2_hv_nmos,pSD) &gt;= 0.4
+gate__mosfet__sg13g2_hv_nmos.separation(pSD, 0.4, square).output(
+    "gate__mosfet__sg13g2_hv_nmos:pSD spacing",
+    "Minimum spacing between gate__mosfet__sg13g2_hv_nmos and pSD: 0.4µm"
 )
 # space(gate:mosfet:sg13g2_lv_nmos,pSD) &gt;= 0.3
 gate__mosfet__sg13g2_lv_nmos.separation(pSD, 0.3, square).output(
     "gate__mosfet__sg13g2_lv_nmos:pSD spacing",
     "Minimum spacing between gate__mosfet__sg13g2_lv_nmos and pSD: 0.3µm"
-)
-# space(gate:mosfet:sg13g2_hv_nmos,pSD) &gt;= 0.4
-gate__mosfet__sg13g2_hv_nmos.separation(pSD, 0.4, square).output(
-    "gate__mosfet__sg13g2_hv_nmos:pSD spacing",
-    "Minimum spacing between gate__mosfet__sg13g2_hv_nmos and pSD: 0.4µm"
 )
 </text></klayout-macro>

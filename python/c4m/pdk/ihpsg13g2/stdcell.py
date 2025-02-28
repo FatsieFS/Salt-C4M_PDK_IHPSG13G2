@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR GPL-2.0-or-later OR CERN-OHL-S-2.0+ OR Apache-2.0
 from typing import Optional, Any, cast
 
-from pdkmaster.technology import property_ as _prp, primitive as _prm
-from pdkmaster.design import circuit as _ckt, layout as _lay, library as _lbry
-from pdkmaster.io.klayout import merge
+from pdkmaster.technology import primitive as _prm
+from pdkmaster.design import library as _lbry
 
 from c4m.flexcell import factory as _fab
 
@@ -36,13 +35,15 @@ class StdCellFactory(_fab.StdCellFactory):
         )
 
 
+# Currently cell_height has to be kept low enough otherwise a Metal1 min space
+# violation from the space table will be seen.
 stdcellcanvas = _fab.StdCellCanvas(
     tech=tech,
     nmos=_nmos, nmos_min_w=0.78,
     pmos=_pmos, pmos_min_w=0.78,
-    cell_height=5.71, cell_horplacement_grid=0.80,
+    cell_height=5.31, cell_horplacement_grid=0.80,
     m1_vssrail_width=1.12, m1_vddrail_width=1.12,
-    well_edge_height=2.86,
+    well_edge_height=2.66,
 )
 # stdcelllib is handled by __getattr__()
 
@@ -62,9 +63,9 @@ stdcell3v3canvas = _fab.StdCellCanvas(
     tech=tech,
     nmos=_ionmos, nmos_min_w=0.76,
     pmos=_iopmos, pmos_min_w=0.76,
-    cell_height=6.8, cell_horplacement_grid=1.00,
+    cell_height=5.53, cell_horplacement_grid=1.00,
     m1_vssrail_width=1.22, m1_vddrail_width=1.22,
-    well_edge_height=3.4,
+    well_edge_height=2.73,
     inside=_activ.oxide[0], inside_enclosure=_activ.min_oxide_enclosure[0],
 )
 # stdcell3v3lib is handled by __getattr__()
